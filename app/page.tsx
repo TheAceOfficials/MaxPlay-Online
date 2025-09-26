@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Hls from "hls.js";
+import Hls, { Hls as HlsType } from "hls.js";
 import styles from "./page.module.css";
 
 function isHls(url: string) {
@@ -15,16 +15,16 @@ function isSafari() {
 export default function HomePage() {
   const [url, setUrl] = useState("");
   const videoRef = useRef(null);
-  const hlsRef = useRef(null);
+  const hlsRef = useRef<HlsType | null>(null);
 
   const playVideo = () => {
     const v = videoRef.current;
     if (!v || !url) return;
 
     if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
-    }
+  hlsRef.current.destroy();
+  hlsRef.current = null;
+};
 
     if (isHls(url)) {
       if (v.canPlayType("application/vnd.apple.mpegurl") || isSafari()) {
