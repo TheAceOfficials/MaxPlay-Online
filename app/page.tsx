@@ -1,103 +1,144 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useRef, useState } from "react";
+import Hls from "hls.js";
+import styles from "./page.module.css";
+
+function isHls(url: string) {
+  return /\.m3u8(\?.*)?$/i.test(url);
+}
+
+function isSafari() {
+  if (typeof navigator === "undefined") return false;
+  return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+}
+
+export default function HomePage() {
+  const [url, setUrl] = useState("");
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const hlsRef = useRef<Hls | null>(null);
+
+  // Load video when Play Now pressed
+  const playVideo = () => {
+    const v = videoRef.current;
+    if (!v || !url) return;
+
+    // Cleanup old
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    if (isHls(url)) {
+      if (v.canPlayType("application/vnd.apple.mpegurl") || isSafari()) {
+        v.src = url;
+        v.play().catch(() => {});
+      } else if (Hls.isSupported()) {
+        const hls = new Hls({ maxBufferLength: 30 });
+        hlsRef.current = hls;
+        hls.loadSource(url);
+        hls.attachMedia(v);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => v.play().catch(() => {}));
+      } else {
+        alert("This browser cannot play HLS. Try external app.");
+      }
+    } else {
+      v.src = url;
+      v.play().catch(() => {});
+    }
+  };
+
+  // External open helpers
+  const openInApp = () => {
+    if (!url) return;
+
+    // Android intent deep-link hint
+    const ua = navigator.userAgent.toLowerCase();
+    const isAndroid = ua.includes("android");
+
+    if (isAndroid) {
+      // Try generic chooser by navigating to the raw URL; many Android browsers show app picker
+      window.location.href = url;
+      // Fallback: show a chooser tip
+      setTimeout(() => {
+        if (document.visibilityState === "visible") {
+          alert("If it didn't prompt, long-press the link and choose Open in app, or copy URL and open in VLC/MX Player.");
+        }
+      }, 1200);
+      return;
+    }
+
+    // iOS: show copy tip (VLC: Open Network Stream)
+    const ok = navigator.clipboard?.writeText(url);
+    Promise.resolve(ok).finally(() => {
+      alert("Link copied. In VLC: More > New Stream > paste the URL. In MPV/others, use Open URL/Network Stream.");
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hlsRef.current) hlsRef.current.destroy();
+    };
+  }, []);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className={styles.bg}>
+      <main className={styles.wrap}>
+        <div className={styles.col}>
+          <h1 className={styles.title}>MaxPlay - Online</h1>
+          <p className={styles.subtitle}>Stream Anything, Instantly. No Login. No Ads.</p>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+          <div className={styles.row}>
+            <input
+              className={styles.input}
+              placeholder="URL"
+              value={url}
+              onChange={(e) => setUrl(e.target.value.trim())}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <button className={styles.btnPrimary} onClick={playVideo}>Play Now</button>
+          </div>
+
+          <button className={styles.btnGhost} onClick={openInApp}>Open in App</button>
+
+          <video
+            ref={videoRef}
+            controls
+            playsInline
+            preload="metadata"
+            style={{
+              width: "min(980px, 100%)",
+              borderRadius: 16,
+              marginTop: 6,
+              display: url ? "block" : "none",
+              background: "rgba(0,0,0,.35)",
+              border: "1px solid rgba(255,255,255,.14)",
+            }}
+          />
+
+          <section className={styles.features}>
+            <div className={styles.feature}>
+              <div>🔒</div>
+              <div>No Need to Login or Sign Up</div>
+            </div>
+            <div className={styles.feature}>
+              <div>✖️</div>
+              <div>Completely Ad‑Free Streaming</div>
+            </div>
+            <div className={styles.feature}>
+              <div>▶️ 8K</div>
+              <div>Up to 8K Ultra HD Video Quality</div>
+            </div>
+            <div className={styles.feature}>
+              <div>🎚️</div>
+              <div>Multiple Audio Tracks Support</div>
+            </div>
+            <div className={styles.feature}>
+              <div>🎧 Dolby Atmos</div>
+              <div>Immersive High‑Quality Audio</div>
+            </div>
+          </section>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
