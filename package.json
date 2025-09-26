@@ -11,7 +11,7 @@
   "react": "19.1.0",
   "react-dom": "19.1.0", 
   "next": "15.5.4",
-  "hls.js": "^1.4.0"   // <- Ye add karo
+  "hls.js": "^1.4.0"
 },
   "devDependencies": {
     "typescript": "^5",
