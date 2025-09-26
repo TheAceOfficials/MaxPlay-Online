@@ -6,7 +6,6 @@ import styles from "./page.module.css";
 function isHls(url: string) {
   return /\.m3u8(\?.*)?$/i.test(url);
 }
-
 function isSafari() {
   if (typeof navigator === "undefined") return false;
   return /^((?!chrome|android).)safari/i.test(navigator.userAgent);
@@ -14,6 +13,7 @@ function isSafari() {
 
 export default function HomePage() {
   const [url, setUrl] = useState("");
+  const [lightTheme, setLightTheme] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
 
@@ -54,9 +54,7 @@ export default function HomePage() {
       window.location.href = url;
       setTimeout(() => {
         if (document.visibilityState === "visible") {
-          alert(
-            "If it didn't prompt, long-press the link and choose Open in app, or copy URL and open in VLC/MX Player."
-          );
+          alert("If it didn't prompt, copy URL and open in VLC/MX Player.");
         }
       }, 1200);
       return;
@@ -64,9 +62,7 @@ export default function HomePage() {
 
     const ok = navigator.clipboard?.writeText(url);
     Promise.resolve(ok).finally(() => {
-      alert(
-        "Link copied. In VLC: More > New Stream > paste the URL. In MPV/others, use Open URL/Network Stream."
-      );
+      alert("Link copied. Use VLC > New Stream > paste the URL.");
     });
   };
 
@@ -77,7 +73,14 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${lightTheme ? styles.lightTheme : ""}`}>
+      <button
+        className={styles.themeToggle}
+        onClick={() => setLightTheme(!lightTheme)}
+      >
+        {lightTheme ? "🌙 Dark" : "☀️ Light"}
+      </button>
+
       <div className={styles.header}>
         <div className={styles.title}>MaxPlay - Online</div>
         <div className={styles.subtitle}>
@@ -108,7 +111,7 @@ export default function HomePage() {
         style={{
           width: "min(980px, 100%)",
           borderRadius: 16,
-          marginTop: 6,
+          marginTop: 12,
           display: url ? "block" : "none",
           background: "rgba(0,0,0,.35)",
           border: "1px solid rgba(255,255,255,.14)",
@@ -122,27 +125,19 @@ export default function HomePage() {
         </div>
         <div className={styles.feature}>
           <div className={styles.featureIcon}>✖️</div>
-          <div className={styles.featureText}>
-            Completely Ad-Free Streaming
-          </div>
+          <div className={styles.featureText}>Completely Ad-Free Streaming</div>
         </div>
         <div className={styles.feature}>
           <div className={styles.featureIcon}>▶️ 8K</div>
-          <div className={styles.featureText}>
-            Up to 8K Ultra HD Video Quality
-          </div>
+          <div className={styles.featureText}>Up to 8K Ultra HD Video Quality</div>
         </div>
         <div className={styles.feature}>
           <div className={styles.featureIcon}>🎚️</div>
-          <div className={styles.featureText}>
-            Multiple Audio Tracks Support
-          </div>
+          <div className={styles.featureText}>Multiple Audio Tracks Support</div>
         </div>
         <div className={styles.feature}>
           <div className={styles.featureIcon}>🎧</div>
-          <div className={styles.featureText}>
-            Dolby Atmos Immersive High-Quality Audio
-          </div>
+          <div className={styles.featureText}>Dolby Atmos High-Quality Audio</div>
         </div>
       </div>
     </div>
