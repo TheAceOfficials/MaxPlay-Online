@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Hls, { Hls as HlsType } from "hls.js";
+import Hls from "hls.js";
 import styles from "./page.module.css";
 
 function isHls(url: string) {
@@ -14,17 +14,17 @@ function isSafari() {
 
 export default function HomePage() {
   const [url, setUrl] = useState("");
-  const videoRef = useRef(null);
-  const hlsRef = useRef<HlsType | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const hlsRef = useRef<Hls | null>(null);
 
   const playVideo = () => {
     const v = videoRef.current;
     if (!v || !url) return;
 
     if (hlsRef.current) {
-  hlsRef.current.destroy();
-  hlsRef.current = null;
-};
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
 
     if (isHls(url)) {
       if (v.canPlayType("application/vnd.apple.mpegurl") || isSafari()) {
@@ -49,12 +49,14 @@ export default function HomePage() {
     if (!url) return;
     const ua = navigator.userAgent.toLowerCase();
     const isAndroid = ua.includes("android");
-    
+
     if (isAndroid) {
       window.location.href = url;
       setTimeout(() => {
         if (document.visibilityState === "visible") {
-          alert("If it didn't prompt, long-press the link and choose Open in app, or copy URL and open in VLC/MX Player.");
+          alert(
+            "If it didn't prompt, long-press the link and choose Open in app, or copy URL and open in VLC/MX Player."
+          );
         }
       }, 1200);
       return;
@@ -62,7 +64,9 @@ export default function HomePage() {
 
     const ok = navigator.clipboard?.writeText(url);
     Promise.resolve(ok).finally(() => {
-      alert("Link copied. In VLC: More > New Stream > paste the URL. In MPV/others, use Open URL/Network Stream.");
+      alert(
+        "Link copied. In VLC: More > New Stream > paste the URL. In MPV/others, use Open URL/Network Stream."
+      );
     });
   };
 
@@ -76,7 +80,9 @@ export default function HomePage() {
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.title}>MaxPlay - Online</div>
-        <div className={styles.subtitle}>Stream Anything, Instantly. No Login. No Ads.</div>
+        <div className={styles.subtitle}>
+          Stream Anything, Instantly. No Login. No Ads.
+        </div>
       </div>
 
       <div className={styles.inputContainer}>
@@ -116,19 +122,27 @@ export default function HomePage() {
         </div>
         <div className={styles.feature}>
           <div className={styles.featureIcon}>✖️</div>
-          <div className={styles.featureText}>Completely Ad‑Free Streaming</div>
+          <div className={styles.featureText}>
+            Completely Ad-Free Streaming
+          </div>
         </div>
         <div className={styles.feature}>
           <div className={styles.featureIcon}>▶️ 8K</div>
-          <div className={styles.featureText}>Up to 8K Ultra HD Video Quality</div>
+          <div className={styles.featureText}>
+            Up to 8K Ultra HD Video Quality
+          </div>
         </div>
         <div className={styles.feature}>
           <div className={styles.featureIcon}>🎚️</div>
-          <div className={styles.featureText}>Multiple Audio Tracks Support</div>
+          <div className={styles.featureText}>
+            Multiple Audio Tracks Support
+          </div>
         </div>
         <div className={styles.feature}>
           <div className={styles.featureIcon}>🎧</div>
-          <div className={styles.featureText}>Dolby Atmos Immersive High‑Quality Audio</div>
+          <div className={styles.featureText}>
+            Dolby Atmos Immersive High-Quality Audio
+          </div>
         </div>
       </div>
     </div>
