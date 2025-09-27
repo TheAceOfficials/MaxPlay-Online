@@ -236,7 +236,7 @@ export default function CustomPlayer() {
     track.label = label;
     track.srclang = lang;
     track.src = url;
-    track.mode = "disabled";
+    (track as HTMLTrackElement & { mode: string }).mode = "disabled";
     v.appendChild(track);
     // update list after it loads
     setTimeout(() => refreshSubTracks());
